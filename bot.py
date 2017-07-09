@@ -9,6 +9,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 from random import randint
 import pymongo
 from telegram.chataction import ChatAction
+import boto3
 
 next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=True, one_time_keyboard=True)
 
@@ -410,11 +411,11 @@ def main():
 
     # Start the Bot
 
-    updater.start_polling()
-##    updater.start_webhook(listen="0.0.0.0",
-##                      port=PORT,
-##                      url_path=TOKEN)
-##    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
+##    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                      port=PORT,
+                      url_path=TOKEN)
+    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
     updater.idle()
 
 
