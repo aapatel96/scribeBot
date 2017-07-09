@@ -1,4 +1,3 @@
-import tweepy
 import json
 import time
 from telegram.ext import Updater, CommandHandler, MessageHandler, ConversationHandler, Filters,CallbackQueryHandler, RegexHandler, Job, JobQueue
@@ -399,11 +398,11 @@ def main():
 
     # Start the Bot
 
-    updater.start_polling()
-    #updater.start_webhook(listen="0.0.0.0",
-                      #port=PORT,
-                      #url_path=TOKEN)
-    #updater.bot.set_webhook("https://twittertrendsbot.herokuapp.com/" + TOKEN)
+##    updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                      port=PORT,
+                      url_path=TOKEN)
+    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
     updater.idle()
 
 
