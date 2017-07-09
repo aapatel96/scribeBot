@@ -28,7 +28,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 SETTITLEASKFIRSTSEG,ADDTERMORDONE,NEXT,STARTPOINT= range(4)
 
 logger = logging.getLogger(__name__)
-client = pymongo.MongoClient('mongodb://heroku_w4nql8qw:vdov1du47ri90lpsus0bfi7i4b@ds151702.mlab.com:51702/heroku_w4nql8qw')
+client = pymongo.MongoClient('mongodb://heroku_l5r7q33g:30htf2r3udd48vctqnnqal1f7h@ds153352.mlab.com:53352/heroku_l5r7q33g')
 
 db = client.get_default_database()
 
