@@ -68,7 +68,12 @@ def start(bot, update):
     bot.sendChatAction(update.message.chat.id, ChatAction.TYPING)
     time.sleep(1)
     update.message.reply_text("Hi")
-    user2add = userformat
+    user2add = {
+              "collection_ids":[],
+              "id":None,
+              "currentSetCollection":[],
+              "currentReadCollection":None
+              }
     user2add['id']=update.message.chat.id
     users.insert_one(user2add)
 
@@ -192,7 +197,13 @@ def done(bot,update):
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
         return ConversationHandler.END
-    collection = collectionformat
+    collection = {
+              "title":None,
+              "user_id":None,
+              "id":None,
+              "collection":None,
+              "index":0
+              }
     print collection
 
     collection_id = randint(10000,99999)
@@ -203,6 +214,7 @@ def done(bot,update):
     collection['user_id'] = update.message.chat.id
     collection['collection']= user['currentSetCollection'][1:]
     collection['title']= user['currentSetCollection'][0]
+    print collection
     collections.insert_one(collection)
     users.update({"id":update.message.chat.id},{"$set":{"currentSetCollection":[]}})
     users.update({"id":update.message.chat.id},{"$push":{"collection_ids":collection_id}})
@@ -398,11 +410,11 @@ def main():
 
     # Start the Bot
 
-##    updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                      port=PORT,
-                      url_path=TOKEN)
-    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
+    updater.start_polling()
+##    updater.start_webhook(listen="0.0.0.0",
+##                      port=PORT,
+##                      url_path=TOKEN)
+##    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
     updater.idle()
 
 
