@@ -324,7 +324,7 @@ def restore(bot,update):
             collection_id = randint(10000,99999)
         collection['id']=collection_id
     collections.insert_one(collection)
-    collection_ids.append(collection_id)
+    collection_ids.append(collection['id'])
     users.update({"id":user['id']},{"$set":{"collection_ids":collection_ids}})
     update.message.reply_text("Collection restored!")
     print collection['title']
