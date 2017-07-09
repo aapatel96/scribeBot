@@ -415,7 +415,7 @@ def main():
     updater.start_webhook(listen="0.0.0.0",
                       port=PORT,
                       url_path=TOKEN)
-    updater.bot.set_webhook("https://notetakingsbot.herokuapp.com/" + TOKEN)
+    updater.bot.set_webhook("https://notetakingbot.herokuapp.com/" + TOKEN)
     updater.idle()
 
 
