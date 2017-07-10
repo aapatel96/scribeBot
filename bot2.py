@@ -18,6 +18,11 @@ import shutil
 print os.environ['AWS_ACCESS_KEY_ID']
 
 
+s3 = boto3.client(
+    's3',
+    aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
+)
 next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=True)
 
 
@@ -36,7 +41,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 SETTITLEPUSH,ADDTERMORDONE,NEXT,STARTPOINT= range(4)
 
 logger = logging.getLogger(__name__)
-client = pymongo.MongoClient('mongodb://heroku_l5r7q33g:30htf2r3udd48vctqnnqal1f7h@ds153352.mlab.com:53352/heroku_l5r7q33g')
+client = pymongo.MongoClient(os.environ['MONGODB_URI'])
 
 db = client.get_default_database()
 
@@ -172,17 +177,7 @@ def menuButtons(bot,update):
 
 
 
-def addTerm(bot,update):
-    try:        
-        user = users.find_one({"id":update.message.chat.id})
-    except:
-        update.message.reply_text("You are not registered. Press /start and then resend command2")
-        return ConversationHandler.END
 
-
-    users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
-    update.message.reply_text("/push")
-    return ADDTERMORDONE
 
 
 def addTerm(bot,update):
@@ -192,8 +187,7 @@ def addTerm(bot,update):
         user = users.find_one({"id":update.message.chat.id})
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
-        return ConversationHandler.END
-
+        return
 
     users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
     update.message.reply_text("/push")
@@ -486,7 +480,7 @@ def nextSeg(bot,update):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    TOKEN = "439473644:AAHBJTxu6Um7_7cq9ltmYbLPqSNMI6tW688"
+    TOKEN = os.environ['BOT_TOKEN']
     updater = Updater(TOKEN)
     PORT = int(os.environ.get('PORT', '5000'))
     # job_q= updater.job_queue
