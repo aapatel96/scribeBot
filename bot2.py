@@ -10,6 +10,13 @@ from random import randint
 import pymongo
 from telegram.chataction import ChatAction
 import boto3
+import requests
+import urllib2
+import shutil
+
+
+print os.environ['aws_access_key_id']
+
 
 next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=True)
 
@@ -26,7 +33,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 
-SETTITLEASKFIRSTSEG,ADDTERMORDONE,NEXT,STARTPOINT= range(4)
+SETTITLEPUSH,ADDTERMORDONE,NEXT,STARTPOINT= range(4)
 
 logger = logging.getLogger(__name__)
 client = pymongo.MongoClient('mongodb://heroku_l5r7q33g:30htf2r3udd48vctqnnqal1f7h@ds153352.mlab.com:53352/heroku_l5r7q33g')
@@ -98,8 +105,9 @@ def menuButtons(bot,update):
     try:
         user = users.find_one({"id":queryObj.message.chat.id})
     except:
-        update.message.reply_text("You are not registered. Press /start and then resend command2")
-        return ConversationHandler.END
+        queryObj.message.reply_text("You are not registered. Press /start and then resend command2")
+        return
+    print user
 
 
     mid = queryObj.message.message_id
@@ -110,17 +118,21 @@ def menuButtons(bot,update):
     intcollid = int(collid)
 
     if str(queryData) == 'start':
+        print "start"
         collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
+        
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
+        print collection
         users.update({"id":user["id"]},{"$set":{"currentReadCollection":collection['id']}})
         queryObj.message.reply_text(collection['collection'][collection['index']])
         collections.update({"id":intcollid,"user_id":user["id"]},{"$inc":{"index":1}})
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
+        
         if collection['index']==len(collection['collection']):
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
             queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+"You have reached the end of this reading",reply_markup=archive_keyboard)
-            return ConversationHandler.END
-        return NEXT
+            return
+        return
 
     if str(queryData) == 'resume':
         print "resume"
@@ -128,20 +140,21 @@ def menuButtons(bot,update):
         print collection
         if collection==None:
             queryObj.message.reply_text('collection not found')
-            return ConversationHandler.END
+            return
 
         users.update({"id":user["id"]},{"$set":{"currentReadCollection":collection['id']}})
         queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
         collections.update({"id":intcollid,"user_id":user["id"]},{"$inc":{"index":1}})
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         print collection
+
+        queryObj.message.reply_text(collection['collection'][collection['index']])
         if collection['index']==len(collection['collection']):
             print "if branch"
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
             queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+"You have reached the end of this reading",reply_markup=archive_keyboard)
-            return ConversationHandler.END
-        return NEXT
-    
+            return
+        return
     if str(queryData) == 'archive':
         print 'archive'
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
@@ -153,31 +166,10 @@ def menuButtons(bot,update):
         collections.delete_one({"id":intcollid,"user_id":user["id"]})
         queryObj.message.reply_text("Collection Archived"+'\n'+'\n'+"<b>Restore Link: </b>"+'/restore'+str(intcollid),parse_mode="HTML")
         print "hello"
-        return ConversationHandler.END
+        return
 
 
 
-def askTitle(bot,update):
-    try:
-        user = users.find_one({"id":update.message.chat.id})
-    except:
-        update.message.reply_text("You are not registered. Press /start and then resend command2")
-        return ConversationHandler.END
-
-    update.message.reply_text("Name?")
-    return SETTITLEASKFIRSTSEG
-
-def setTitleAskFirstSeg(bot,update):
-    try:
-        user = users.find_one({"id":update.message.chat.id})
-    except:
-        update.message.reply_text("You are not registered. Press /start and then resend command2")
-        return ConversationHandler.END
-
-    users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
-    update.message.reply_text("Alright, I am listening...")
-    update.message.reply_text("Send /done when you are done")
-    return ADDTERMORDONE
 
 
 def addTerm(bot,update):
@@ -189,39 +181,167 @@ def addTerm(bot,update):
 
 
     users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
+    update.message.reply_text("/push")
     return ADDTERMORDONE
 
 
+def addTerm(bot,update):
+    update.message.reply_text(os.environ['aws_access_key_id'])
+
+    try:        
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return ConversationHandler.END
+
+
+    users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
+    update.message.reply_text("/push")
+    return
+
+
+def addAudio(bot,update):
+    print update
+    file_id= update.message.audio.file_id
+    url = bot.getFile(file_id).file_path
+##    s3.upload_file("a.txt","scribenotetakingbot","b.txt")
+##    aws_base_url ="https://s3-us-west-1.amazonaws.com/scribenotetakingbot/"
+    print url
+
+def addVoice(bot,update):
+    print update
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return
+    file_id= update.message.voice.file_id
+    url = bot.getFile(file_id).file_path
+    print url
+    urlComps = url.split('/')
+    fileName= urlComps[-1]
+    fileobj = requests.get(url, stream = True)
+    fileact=fileobj.raw
+    with open(fileName, 'wb') as location:
+        shutil.copyfileobj(fileact, location)
+    del fileact
+    s3.upload_file(fileName,"scribenotetakingbot",fileName)
+    url ="https://s3-us-west-1.amazonaws.com/scribenotetakingbot/"+fileName
+    users.update({"id":user['id']},{"$push":{"currentSetCollection":url}})
+    os.remove(fileName)
+    update.message.reply_text("/push")
+    return
+
+
+def addPhoto(bot,update):
+    print update
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return
+    file_id= update.message.photo[0]['file_id']
+    url = bot.getFile(file_id).file_path
+    print url
+    urlComps = url.split('/')
+    fileName= urlComps[-1]
+    print fileName
+    fileobj = requests.get(url, stream = True)
+    fileact=fileobj.raw
+    with open(fileName, 'wb') as location:
+        shutil.copyfileobj(fileact, location)
+    del fileact
+    s3.upload_file(fileName,"scribenotetakingbot",fileName)
+    url ="https://s3-us-west-1.amazonaws.com/scribenotetakingbot/"+fileName
+    users.update({"id":user['id']},{"$push":{"currentSetCollection":url}})
+    os.remove(fileName)
+    update.message.reply_text("/push")
+    return
+    
+
+
+def addVideo(bot,update):
+    print update
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return
+    print update
+    file_id= update.message.video.file_id
+    url = bot.getFile(file_id).file_path
+    print url
+    urlComps = url.split('/')
+    fileName= urlComps[-1]
+    fileobj = requests.get(url, stream = True)
+    fileact=fileobj.raw
+    with open(fileName, 'wb') as location:
+        shutil.copyfileobj(fileact, location)
+    del fileact
+    s3.upload_file(fileName,"scribenotetakingbot",fileName)
+    url ="https://s3-us-west-1.amazonaws.com/scribenotetakingbot/"+fileName
+    users.update({"id":user['id']},{"$push":{"currentSetCollection":url}})
+    os.remove(fileName)
+    update.message.reply_text("/push")
+    return
 def done(bot,update):
     try:
         user = users.find_one({"id":update.message.chat.id})
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
         return ConversationHandler.END
-    collection = {
-              "title":None,
-              "user_id":None,
-              "id":None,
-              "collection":None,
-              "index":0
-              }
-    print collection
+    update.message.reply_text("What do you want to call this collection?")
+    return SETTITLEPUSH
 
+
+def setTitlePush(bot,update):
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return ConversationHandler.END
+    
     collection_id = randint(10000,99999)
     while collection_id in user['collection_ids']:
         collection_id = randint(10000,99999)
-
-    collection['id']= collection_id
-    collection['user_id'] = update.message.chat.id
-    collection['collection']= user['currentSetCollection'][1:]
-    collection['title']= user['currentSetCollection'][0]
-    print collection
+    collection = {
+              "title":update.message.text,
+              "user_id":update.message.chat.id,
+              "id":collection_id,
+              "collection":user['currentSetCollection'],
+              "index":0
+              }
     collections.insert_one(collection)
     users.update({"id":update.message.chat.id},{"$set":{"currentSetCollection":[]}})
     users.update({"id":update.message.chat.id},{"$push":{"collection_ids":collection_id}})
+    
     update.message.reply_text("Collection set!")
+    if collection['index']==0:
+        keyboard = start_keyboard
+    else:
+        keyboard = start_keyboard2
+
+    update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'], reply_markup=keyboard)
     return ConversationHandler.END
 
+def cancelPush(bot,update):
+    update.message.reply_text("Alright... to clear the current selection use /clear")
+    return ConversationHandler.END
+
+
+def clear(bot,update):
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return 
+
+    users.update({"id":user['id']},{"$set":{"currentSetCollection":[]}})
+    update.message.reply_text("collection cleared")
+    return
+
+
+    
 
 def mycollections(bot,update):
     try:
@@ -272,7 +392,7 @@ def read(bot,update):
 
     update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'], reply_markup=keyboard)
 
-    return STARTPOINT
+    return
 
 def archivef(bot,update):
     try:
@@ -297,7 +417,7 @@ def archivef(bot,update):
     users.update({"id":user['id']},{"$set":{"collection_ids":collection_ids}})
     collections.delete_one({"id":collid,"user_id":user["id"]})
     update.message.reply_text("Collection Archived"+'\n'+'\n'+"<b>Restore Link: </b>"+'/restore'+str(collid),parse_mode="HTML")
-    return ConversationHandler.END
+    return
 
 def restore(bot,update):
     try:
@@ -308,8 +428,7 @@ def restore(bot,update):
     text = update.message.text
     text = text[8:]
     collid = int(text)
-
-                       
+          
     collection = archive.find_one({"id":collid,"user_id":user["id"]})
     if not collection:
         bot.sendChatAction(update.message.chat.id, ChatAction.TYPING)
@@ -323,36 +442,42 @@ def restore(bot,update):
         while collection_id in user['collection_ids']:
             collection_id = randint(10000,99999)
         collection['id']=collection_id
+        
     collections.insert_one(collection)
     collection_ids.append(collection['id'])
     users.update({"id":user['id']},{"$set":{"collection_ids":collection_ids}})
     update.message.reply_text("Collection restored!")
     print collection['title']
-    collection=collection.find_one({"id":collection_id,"user_id":user["id"]})
-    update.message.reply_text("COLL"+str(collection_id)+'\n'+'\n'+collection['title'],reply_markup=start_keyboard)
-    return ConversationHandler.END
+    collection=collections.find_one({"id":collection['id'],"user_id":user["id"]})
+    update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=start_keyboard)
+    return 
 
 
 def nextSeg(bot,update):
+    print "nextSeg reached"
     try:
         user = users.find_one({"id":update.message.chat.id})
+        print "user found"
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
         return ConversationHandler.END
     
     if update.message.text=="next":
-        print user['currentReadCollection']
-        print update.message.chat.id
+        print "next branch activated"
         collection = collections.find_one({"id":user['currentReadCollection'],"user_id":update.message.chat.id})
+        
         if collection['index']==len(collection['collection']):
             collections.update({"id":user['currentReadCollection'],"user_id":user["id"]},{"$set":{"index":0}})
             update.message.reply_text("You have reached the end of this collection")
             update.message.reply_text("COLL"+str(collection['id']),reply_markup=archive_keyboard)
             return ConversationHandler.END
-        print collection
+        
+
+                
+        print "hi"
         update.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
         collections.update({"id":user['currentReadCollection'],"user_id":update.message.chat.id},{"$inc":{"index":1}})
-        return NEXT
+        return
 
     if update.message.text=="exit":
         users.update({"user_id":update.message.chat.id},{"$set":{"currentReadCollection":None}})
@@ -372,40 +497,42 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-
-    #dp.add_handler(CallbackQueryHandler(menuButtons))
     dp.add_handler(CommandHandler("collections",mycollections))
     dp.add_handler(RegexHandler("^/read",read))
     dp.add_handler(RegexHandler("^/archive",archivef))
     dp.add_handler(RegexHandler("^/restore",restore))
+    dp.add_handler(CallbackQueryHandler(menuButtons))
 
 
-
-
-
-    createreadCollection = ConversationHandler(
-    entry_points=[CommandHandler("new",askTitle),CallbackQueryHandler(menuButtons),RegexHandler("^/read",read)],
+    
+    pushhandler = ConversationHandler(
+    entry_points=[CommandHandler("push",done)],
     states={
-
-        STARTPOINT: [CallbackQueryHandler(menuButtons),
-                      
-                ],
-        SETTITLEASKFIRSTSEG: [MessageHandler(Filters.text,
-                                   setTitleAskFirstSeg)
-                  ],
-        NEXT: [MessageHandler(Filters.text,nextSeg)],
-        
-        ADDTERMORDONE: [MessageHandler(Filters.text,addTerm),
-                        CommandHandler("done",done)                        
-                ],
-
-
+        SETTITLEPUSH: [RegexHandler("^cancel?",cancelPush),
+                       MessageHandler(Filters.text,setTitlePush)
+                  ]
     },
 
     fallbacks=[RegexHandler('^cancel$', help)]
     )
+    dp.add_handler(pushhandler)
 
-    dp.add_handler(createreadCollection)
+    dp.add_handler(RegexHandler("^next?",nextSeg))
+
+
+    dp.add_handler(MessageHandler(Filters.text,addTerm))
+    dp.add_handler(MessageHandler(Filters.photo,addPhoto))
+    dp.add_handler(MessageHandler(Filters.audio,addAudio))
+    dp.add_handler(MessageHandler(Filters.voice,addVoice))
+    dp.add_handler(MessageHandler(Filters.video,addVideo))
+    
+
+
+    dp.add_handler(RegexHandler("^exit?",nextSeg))
+    dp.add_handler(CommandHandler("clear",clear))
+
+
+
     # log all errors
     dp.add_error_handler(error)
 
