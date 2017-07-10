@@ -2,3 +2,4 @@ python-telegram-bot==6.1.0
 pymongo
 logging
 boto3
+requests
