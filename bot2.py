@@ -15,8 +15,6 @@ import urllib2
 import shutil
 
 
-print os.environ['AWS_ACCESS_KEY_ID']
-
 
 s3 = boto3.client(
     's3',
@@ -28,7 +26,7 @@ next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=
 
 start_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("start", callback_data='start')]])
 
-start_keyboard2 = InlineKeyboardMarkup([[InlineKeyboardButton("beginning", callback_data='start'),InlineKeyboardButton("resume", callback_data='resume')]])
+start_keyboard2 = InlineKeyboardMarkup([[InlineKeyboardButton("start", callback_data='start'),InlineKeyboardButton("resume", callback_data='resume'),InlineKeyboardButton("archive", callback_data='archive')]])
 
 archive_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("archive", callback_data='archive'),InlineKeyboardButton("restart", callback_data='start')]])
 
@@ -349,13 +347,13 @@ def mycollections(bot,update):
     string = 'COLLECTIONS'+'\n'+'\n'
 
     for i in collectionsList:
-        string = string+i['title']+'\n'+"View Link: "+'/read'+str(i['id'])+'\n'+'\n'
+        string = string+i['title']+'\n'+"View Link: "+'/view'+str(i['id'])+'\n'+'\n'
     update.message.reply_text(string)
     return
 
 
 
-def read(bot,update):
+def view(bot,update):
     print update
     try:
         user = users.find_one({"id":update.message.chat.id})
@@ -492,7 +490,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("collections",mycollections))
-    dp.add_handler(RegexHandler("^/read",read))
+    dp.add_handler(RegexHandler("^/view",view))
     dp.add_handler(RegexHandler("^/archive",archivef))
     dp.add_handler(RegexHandler("^/restore",restore))
     dp.add_handler(CallbackQueryHandler(menuButtons))
