@@ -181,8 +181,6 @@ def menuButtons(bot,update):
 
 
 def addTerm(bot,update):
-    update.message.reply_text(os.environ['aws_access_key_id'])
-
     try:        
         user = users.find_one({"id":update.message.chat.id})
     except:
