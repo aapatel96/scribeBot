@@ -127,13 +127,14 @@ def menuButtons(bot,update):
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         print collection
         users.update({"id":user["id"]},{"$set":{"currentReadCollection":collection['id']}})
-        queryObj.message.reply_text(collection['collection'][collection['index']])
+        queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
         collections.update({"id":intcollid,"user_id":user["id"]},{"$inc":{"index":1}})
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         
         if collection['index']==len(collection['collection']):
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
-            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+"You have reached the end of this reading",reply_markup=archive_keyboard)
+            queryObj.message.reply_text("You have reached the end of this reading")
+            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)
             return
         return
 
@@ -155,8 +156,8 @@ def menuButtons(bot,update):
         if collection['index']==len(collection['collection']):
             print "if branch"
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
-            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+"You have reached the end of this reading",reply_markup=archive_keyboard)
-            return
+            queryObj.message.reply_text("You have reached the end of this reading")
+            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)            return
         return
     if str(queryData) == 'archive':
         print 'archive'
@@ -461,9 +462,7 @@ def nextSeg(bot,update):
         if collection['index']==len(collection['collection']):
             collections.update({"id":user['currentReadCollection'],"user_id":user["id"]},{"$set":{"index":0}})
             update.message.reply_text("You have reached the end of this collection")
-            update.message.reply_text("COLL"+str(collection['id']),reply_markup=archive_keyboard)
-            return ConversationHandler.END
-        
+            update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)        
 
                 
         print "hi"
