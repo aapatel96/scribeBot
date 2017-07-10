@@ -15,7 +15,7 @@ import urllib2
 import shutil
 
 
-print os.environ['aws_access_key_id']
+print os.environ['AWS_ACCESS_KEY_ID']
 
 
 next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=True)
