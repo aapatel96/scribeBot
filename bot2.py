@@ -157,7 +157,8 @@ def menuButtons(bot,update):
             print "if branch"
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
             queryObj.message.reply_text("You have reached the end of this reading")
-            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)            return
+            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)
+            return
         return
     if str(queryData) == 'archive':
         print 'archive'
