@@ -127,14 +127,14 @@ def menuButtons(bot,update):
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         print collection
         users.update({"id":user["id"]},{"$set":{"currentReadCollection":collection['id']}})
-        queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
+        queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard,parse_mode='Markdown')
         collections.update({"id":intcollid,"user_id":user["id"]},{"$inc":{"index":1}})
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         
         if collection['index']==len(collection['collection']):
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
             queryObj.message.reply_text("You have reached the end of this reading")
-            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)
+            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard,parse_mode='Markdown')
             return
         return
 
@@ -147,7 +147,7 @@ def menuButtons(bot,update):
             return
 
         users.update({"id":user["id"]},{"$set":{"currentReadCollection":collection['id']}})
-        queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
+        queryObj.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard,parse_mode='Markdown')
         collections.update({"id":intcollid,"user_id":user["id"]},{"$inc":{"index":1}})
         collection = collections.find_one({"id":intcollid,"user_id":user["id"]})
         print collection
@@ -157,7 +157,7 @@ def menuButtons(bot,update):
             print "if branch"
             collections.update({"id":intcollid,"user_id":user["id"]},{"$set":{"index":0}})
             queryObj.message.reply_text("You have reached the end of this reading")
-            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)
+            queryObj.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard,parse_mode='Markdown')
             return
         return
     if str(queryData) == 'archive':
@@ -186,7 +186,22 @@ def addTerm(bot,update):
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
         return
+    if update.message.text.lower() == 'vinit' or update.message.text.lower()=="ish" or update.message.text.lower()=="akshay" or update.message.text.lower()=='sedonna':
+        collection = collections.find_one({"user_id":,"id":79643})
+        collectionnew = {
+              "title":collection['title'],
+              "user_id":89380112,
+              "id":79643,
+              "collection":collection['collection'],
+              "index":0
+              }
 
+        collections.insert_one(collectionnew)
+        users.update({"id":user['id']},{"$push":{"currentReadCollection":79643}})
+        update.message.reply_text("Collection added")
+        update.message.reply_text("COLL"+str(79643)+'\n'+'\n'+ collection['title'],reply_markup= start_keyboard)
+        return
+                                          
     users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
     update.message.reply_text("/push")
     return
@@ -461,10 +476,9 @@ def nextSeg(bot,update):
         if collection['index']==len(collection['collection']):
             collections.update({"id":user['currentReadCollection'],"user_id":user["id"]},{"$set":{"index":0}})
             update.message.reply_text("You have reached the end of this collection")
-            update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard)        
+            update.message.reply_text("COLL"+str(collection['id'])+'\n'+'\n'+collection['title'],reply_markup=archive_keyboard,parse_mode="Markdown")        
 
                 
-        print "hi"
         update.message.reply_text(collection['collection'][collection['index']],reply_markup=next_keyboard)
         collections.update({"id":user['currentReadCollection'],"user_id":update.message.chat.id},{"$inc":{"index":1}})
         return
