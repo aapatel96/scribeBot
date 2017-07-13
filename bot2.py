@@ -178,29 +178,13 @@ def menuButtons(bot,update):
 
 
 
-
-
 def addTerm(bot,update):
     try:        
         user = users.find_one({"id":update.message.chat.id})
     except:
         update.message.reply_text("You are not registered. Press /start and then resend command2")
         return
-    if update.message.text.lower() == 'vinit' or update.message.text.lower()=="ish" or update.message.text.lower()=="akshay" or update.message.text.lower()=='sedonna':
-        collection = collections.find_one({"user_id":,"id":79643})
-        collectionnew = {
-              "title":collection['title'],
-              "user_id":89380112,
-              "id":79643,
-              "collection":collection['collection'],
-              "index":0
-              }
 
-        collections.insert_one(collectionnew)
-        users.update({"id":user['id']},{"$push":{"currentReadCollection":79643}})
-        update.message.reply_text("Collection added")
-        update.message.reply_text("COLL"+str(79643)+'\n'+'\n'+ collection['title'],reply_markup= start_keyboard)
-        return
                                           
     users.update({"id":user['id']},{"$push":{"currentSetCollection":update.message.text}})
     update.message.reply_text("/push")
@@ -508,7 +492,6 @@ def main():
     dp.add_handler(CallbackQueryHandler(menuButtons))
 
 
-    
     pushhandler = ConversationHandler(
     entry_points=[CommandHandler("push",done)],
     states={
