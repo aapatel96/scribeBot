@@ -23,7 +23,6 @@ s3 = boto3.client(
 )
 next_keyboard = ReplyKeyboardMarkup([[KeyboardButton("next")]], resize_keyboard=True)
 
-
 start_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("start", callback_data='start')]])
 
 start_keyboard2 = InlineKeyboardMarkup([[InlineKeyboardButton("start", callback_data='start'),InlineKeyboardButton("resume", callback_data='resume'),InlineKeyboardButton("archive", callback_data='archive')]])
@@ -351,6 +350,35 @@ def mycollections(bot,update):
     return
 
 
+def status(bot,update):
+    try:
+        user = users.find_one({"id":update.message.chat.id})
+    except:
+        update.message.reply_text("You are not registered. Press /start and then resend command2")
+        return ConversationHandler.END
+
+    if len(user["currentSetCollection"]) == 0:
+        string ="There are no segments in your set collection"
+    else:
+        string = "There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection"+'\n'+'\n'+"The starting message is:"+'\n'+'\n'+user["currentSetCollection"][0]+'\n'+'\n'+"The most recent message is:"+'\n'+'\n'+user["currentSetCollection"][-1]
+        update.message.reply_text("There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection")
+    
+    update.message.reply_text(string)
+
+    if len(user["currentReadCollection"]) == 0:
+        string ="There are no segments in your read collection"
+    else:
+        string = "You are currently at index "+str(user['currentReadCollection']['index']+1) +" out of "+str(user['currentReadCollection']['index']+1)
+        update.message.reply_text("There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection")
+    
+    update.message.reply_text(string)
+
+    return
+
+
+
+
+
 
 def view(bot,update):
     print update
@@ -489,6 +517,7 @@ def main():
     dp.add_handler(RegexHandler("^/view",view))
     dp.add_handler(RegexHandler("^/archive",archivef))
     dp.add_handler(RegexHandler("^/restore",restore))
+    dp.add_handler(CommandHandler("status",status))
     dp.add_handler(CallbackQueryHandler(menuButtons))
 
 
