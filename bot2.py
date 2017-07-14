@@ -377,7 +377,7 @@ def status(bot,update):
     update.message.reply_text(string)
     readCollection = collections.find_one({"id":user['currentReadCollection']})
 
-    if len(readCollection['collection']) == 0 or readCollection == None:
+    if readCollection == None or len(readCollection['collection']) == 0:
         string ="There are no segments in your read collection"
     else:
         string = "You are currently at index "+str(readCollection['index']+1) +" out of "+str(len(readCollection['collection'])+1)+'\n'+'\n'+"The title of this collection is "+readCollection['title']
