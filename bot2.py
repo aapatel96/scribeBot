@@ -51,7 +51,8 @@ userformat = {
               "collection_ids":[],
               "id":None,
               "currentSetCollection":[],
-              "currentReadCollection":None
+              "currentReadCollection":None,
+              "currentConvState":None
               }
 
 collectionformat = {
@@ -70,7 +71,7 @@ def find_collection(collections, collection_id):
             return i
     return None
 
-def start(bot, update):
+def start(bot, update, job_queue):
     user = users.find_one({"id":update.message.chat.id})
     if user != None:
         update.message.reply_text("you are already registered")
@@ -82,12 +83,22 @@ def start(bot, update):
               "collection_ids":[],
               "id":None,
               "currentSetCollection":[],
-              "currentReadCollection":None
+              "currentReadCollection":None,
+              "currentConvState":None
               }
     user2add['id']=update.message.chat.id
     users.insert_one(user2add)
+    job_queue.run_once(ping,60*5)
 
 
+def ping(bot,job):
+    requests.get('http://smaugbot.herokuapp.com/')
+    requests.post('http://smaugbot.herokuapp.com/', data = {'ping':'ping'})
+    requests.get('http://telegrampocketbot.herokuapp.com/')
+    requests.post('http://telegrampocketbot.herokuapp.com/', data = {'ping':'ping'})
+    requests.get('http://telegrampocketbot.herokuapp.com/')
+    requests.post('http://telegramnewsbot.herokuapp.com/', data = {'ping':'ping'})
+    job_queue.run_once(ping,5*60)
 
 def help(bot, update):
     update.message.reply_text('Send Location and I will tell you trends near you')
@@ -372,12 +383,7 @@ def status(bot,update):
         update.message.reply_text("There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection")
     
     update.message.reply_text(string)
-
     return
-
-
-
-
 
 
 def view(bot,update):
@@ -511,7 +517,7 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("start", start, pass_job_queue=True))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("collections",mycollections))
     dp.add_handler(RegexHandler("^/view",view))
