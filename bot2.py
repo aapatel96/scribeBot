@@ -372,15 +372,17 @@ def status(bot,update):
         string ="There are no segments in your set collection"
     else:
         string = "There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection"+'\n'+'\n'+"The starting message is:"+'\n'+'\n'+user["currentSetCollection"][0]+'\n'+'\n'+"The most recent message is:"+'\n'+'\n'+user["currentSetCollection"][-1]
-        update.message.reply_text("There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection")
+        update.message.reply_text(string)
     
     update.message.reply_text(string)
+    readCollection = collections.find_one({"id":user['currentReadCollection']})
 
-    if len(user["currentReadCollection"]) == 0:
+    if len(readCollection['collection']) == 0 or readCollection == None:
         string ="There are no segments in your read collection"
     else:
-        string = "You are currently at index "+str(user['currentReadCollection']['index']+1) +" out of "+str(user['currentReadCollection']['index']+1)
-        update.message.reply_text("There are currently "+str(len(user["currentSetCollection"])) + " messages in your set collection")
+        string = "You are currently at index "+str(readCollection['index']+1) +" out of "+str(len(readCollection['collection'])+1)+'\n'+'\n'+"The title of this collection is "+readCollection['title']
+
+        update.message.reply_text(string)
     
     update.message.reply_text(string)
     return
